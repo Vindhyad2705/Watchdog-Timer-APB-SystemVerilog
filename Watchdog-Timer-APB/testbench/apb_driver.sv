@@ -1,0 +1,51 @@
+class apb_driver;
+
+    virtual apb_if vif;
+
+    mailbox gen2drv;
+
+
+    function new(mailbox m);
+
+        gen2drv = m;
+
+    endfunction
+
+
+    task run();
+
+        apb_txn t;
+
+
+        forever begin
+
+            gen2drv.get(t);
+
+
+            // SETUP
+            @(posedge vif.PCLK);
+
+            vif.PSEL    <= 1;
+            vif.PENABLE <= 0;
+            vif.PWRITE  <= t.write;
+            vif.PADDR   <= t.addr;
+            vif.PWDATA  <= t.data;
+
+
+            // ACCESS
+            @(posedge vif.PCLK);
+
+            vif.PENABLE <= 1;
+
+
+            // END
+            @(posedge vif.PCLK);
+
+            vif.PSEL    <= 0;
+            vif.PENABLE <= 0;
+
+        end
+
+    endtask
+
+endclass
